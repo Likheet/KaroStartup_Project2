@@ -46,7 +46,8 @@ pip install -r requirements.txt
 echo "AIPROXY_TOKEN=your_gemini_api_key" > .env
 
 # Run the analysis on your dataset
-python autolysis.py data/your_dataset.csv
+python autolysis.py your_dataset.csv 
+# OR python autolysis.py data/your_dataset.csv 
 ```
 
 ## Example Output
@@ -79,11 +80,12 @@ The tool generates a folder with:
 .
 ├── autolysis.py         # Main analysis script
 ├── data/                # Data files directory
-├── media/               # Output directory for README and visualizations
+├── goodreads/           # Output directory for *goodreads* README and visualizations
+├── happiness/           # Output directory for *happiness* README and visualizations
+├── media/               # Output directory for *media* README and visualizations
 └── requirements.txt     # Project dependencies
 ```
 
-## About the Developer
 
 This project demonstrates advanced proficiency in:
 - Data analysis and visualization
@@ -94,4 +96,4 @@ This project demonstrates advanced proficiency in:
 
 ---
 
-*This project was developed as part of KaroStartup Project 2*
+*This project was developed as part of KaroStartup Internship*
