@@ -19,11 +19,10 @@ from sklearn.ensemble import IsolationForest
 from matplotlib.ticker import MaxNLocator
 import matplotlib
 import requests
-# Using tenacity for retries, install with: pip install tenacity
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential, retry_if_exception_type
 from dotenv import load_dotenv
 
-load_dotenv()  # load variables from .env in the current directory
+load_dotenv()
 
 def load_data(filename):
     """Load CSV data into a Pandas DataFrame."""
@@ -671,30 +670,6 @@ Suggest 2 visualizations with Python code snippets that would effectively showca
 """
     return get_gemini_response(prompt)
 
-def generate_visualizations(df):
-    """Creates required PNG visualizations and saves them."""
-    
-    # 1. Histogram of average ratings
-    plt.figure(figsize=(10, 6))
-    sns.histplot(df["average_rating"], bins=20, kde=True)
-    plt.title("Distribution of Average Ratings")
-    plt.xlabel("Average Rating")
-    plt.ylabel("Frequency")
-    hist_path = os.path.join(output_dir, "rating_distribution.png")
-    plt.savefig(hist_path)
-    plt.close()
-
-    # 2. Scatter plot of reviews vs. ratings
-    plt.figure(figsize=(10, 6))
-    sns.scatterplot(x=df["work_text_reviews_count"], y=df["average_rating"])
-    plt.title("Average Rating vs. Number of Reviews")
-    plt.xlabel("Number of Reviews")
-    plt.ylabel("Average Rating")
-    scatter_path = os.path.join(output_dir, "ratings_vs_reviews.png")
-    plt.savefig(scatter_path)
-    plt.close()
-
-    return [hist_path, scatter_path]
 
 def get_ai_story(filename, df, summary, missing_values, outlier_results, clustering_results, pca_results, analysis_suggestions, visualization_suggestions) -> str:
     """
@@ -721,63 +696,56 @@ def get_ai_story(filename, df, summary, missing_values, outlier_results, cluster
     missing_values_summary = missing_values.to_string() if not missing_values.empty else "No missing values found."
     
     prompt = f"""
-Context: You are a data storyteller. Synthesize the following analysis results into a compelling markdown report.
-    
-Dataset Analyzed: '{filename}'
-Dimensions: {df_shape[0]} rows x {df_shape[1]} columns
-Data Completeness: {completeness:.2f}%
+    Context: You are a data storyteller. Synthesize the following analysis results into a compelling markdown report.
+        
+    Dataset Analyzed: '{filename}'
+    Dimensions: {df_shape[0]} rows x {df_shape[1]} columns
+    Data Completeness: {completeness:.2f}%
 
-**Analysis Workflow Summary:**
+    **Analysis Workflow Summary:**
 
-1. Initial Exploration:
-   - Basic Statistics:
-{basic_stats_summary}
-   - Missing Values:
-{missing_values_summary}
+    1. Initial Exploration:
+    - Basic Statistics:
+    {basic_stats_summary}
+    - Missing Values:
+    {missing_values_summary}
 
-2. Advanced Analysis:
-   - Outlier Detection: {outlier_results}
-   - Clustering Results: {clustering_results}
-   - PCA Analysis: {pca_results}
+    2. Advanced Analysis:
+    - Outlier Detection: {outlier_results}
+    - Clustering Results: {clustering_results}
+    - PCA Analysis: {pca_results}
 
-3. AI-Assisted Insights:
-   - Further Analysis Suggestions: {analysis_suggestions}
-   - Visualization Suggestions: {visualization_suggestions}
+    3. AI-Assisted Insights:
+    - Further Analysis Suggestions: {analysis_suggestions}
+    - Visualization Suggestions: {visualization_suggestions}
 
-Your Task:
-Write a detailed markdown report with the following sections:
+    Your Task:
+    Write a detailed markdown report with the following sections:
 
-1. **Introduction & Data Overview:** Introduce the dataset, including size and completeness.
-2. **Analytical Journey:** Describe the process used, highlighting key analysis steps and their outcomes.
-3. **Key Findings:** Summarize major insights from outlier detection, clustering, and PCA.
-4. **Recommendations & Next Steps:** Provide actionable recommendations and ideas for further analysis.
+    1. **Introduction & Data Overview:** Introduce the dataset, including size and completeness.
+    2. **Analytical Journey:** Describe the process used, highlighting key analysis steps and their outcomes.
+    3. **Key Findings:** Summarize major insights from outlier detection, clustering, and PCA.
+    4. **Recommendations & Next Steps:** Provide actionable recommendations and ideas for further analysis.
 
-Use markdown formatting (headers, lists, bold text) and a narrative tone.
-"""
+    Use markdown formatting (headers, lists, bold text) and a narrative tone.
+    """
     story = get_gemini_response(prompt)
     return story
 
 def generate_readme(filename, df, summary, missing_values, outlier_results, clustering_results, pca_results):
     """Generates README.md with AI-generated insights and saves it in goodreads/."""
     
-    # Get AI-driven analysis suggestions
     analyses = get_ai_analysis_suggestions(summary, missing_values, None, df.dtypes.reset_index(), df.head())
-    # Get AI-driven visualization suggestions
     visualizations = get_ai_visualization_suggestions(summary, df.dtypes.reset_index())
     
-    # Generate required visualizations (PNG files saved in output_dir)
     visualization_paths = generate_visualizations(df)
     
-    # Generate the AI story (i.e. the README as a narrative report)
     story = get_ai_story(filename, df, summary, missing_values, outlier_results, clustering_results, pca_results, analyses, visualizations)
     
-    # Append the visualization images into the README markdown
     story += "\n\n## Supporting Visualizations\n"
     for img_path in visualization_paths:
-        # Markdown image syntax: ![Alt Text](relative/path)
         story += f"![Visualization]({img_path})\n"
 
-    # Save the final README.md in the goodreads/ directory
     readme_path = os.path.join(output_dir, "README.md")
     with open(readme_path, "w", encoding="utf-8") as file:
         file.write(story)
@@ -786,13 +754,11 @@ def generate_readme(filename, df, summary, missing_values, outlier_results, clus
 
 def clean_markdown(text):
     lines = text.splitlines()
-    # Remove leading and trailing triple backticks if present
     if lines and lines[0].strip().startswith("```markdown"):
         lines = lines[1:]
     if lines and lines[-1].strip() == "```":
         lines = lines[:-1]
     
-    # Remove any introductory nonsense lines, e.g., starting with "Okay,"
     while lines and lines[0].strip().lower().startswith("okay,"):
         lines.pop(0)
     
